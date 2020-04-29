@@ -1,0 +1,37 @@
+sudo: required
+services:
+  - docker
+
+# Tagging it as charlieouyang/react-test since it's needed for later steps to run
+# the image and test... Tag name can be anything since it's limited to this pipeline
+before_install:
+  - docker build -t charlieouyang/react-test -f ./client/Dockerfile.dev ./client
+
+# All the commands that need to be ran in order for our test suite to run
+script:
+  - docker run -e CI=true charlieouyang/react-test npm test
+
+after_success:
+  - docker build -t charlieouyang/multi-client -f ./client
+  - docker build -t charlieouyang/multi-nginx -f ./nginx
+  - docker build -t charlieouyang/multi-server -f ./server
+  - docker build -t charlieouyang/multi-worker -f ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push charlieouyang/multi-client
+  - docker push charlieouyang/multi-nginx
+  - docker push charlieouyang/multi-server
+  - docker push charlieouyang/multi-worker
+
+# deploy:
+#   provider: elasticbeanstalk
+#   region: "us-east-2"
+#   app: "docker-react"
+#   env: "DockerReact-env"
+#   bucket_name: "elasticbeanstalk-us-east-2-574615900673"
+#   bucket_path: "docker-react"
+#   on:
+#     branch: master
+#   access_key_id: $AWS_ACCESS_KEY
+#   secret_access_key: $AWS_SECRET_KEY
