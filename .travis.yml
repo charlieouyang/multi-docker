@@ -23,6 +23,7 @@ after_success:
   - docker push charlieouyang/multi-nginx
   - docker push charlieouyang/multi-server
   - docker push charlieouyang/multi-worker
+  - echo "Charlieeeee DONE"
 
 # deploy:
 #   provider: elasticbeanstalk
